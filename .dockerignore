@@ -1,0 +1,114 @@
+# === .dockerignore — DockerZak ===
+# Prevents secrets, credentials, and unnecessary files from entering the
+# Docker build context.  Keep this file updated as the repo grows.
+
+# -------------------------------------------------------------------------
+# Version control
+# -------------------------------------------------------------------------
+.git
+.gitignore
+.gitattributes
+.github
+
+# -------------------------------------------------------------------------
+# Secret / credential files
+# -------------------------------------------------------------------------
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+id_ecdsa
+id_ecdsa.*
+id_dsa
+id_dsa.*
+*.ppk
+*.jks
+*.keystore
+credentials.json
+service-account*.json
+*secret*
+*credential*
+*password*
+*token*
+kubeconfig
+.kubeconfig
+.aws
+.gcp
+.azure
+terraform.tfvars
+*.tfvars
+
+# -------------------------------------------------------------------------
+# IDE and editor artifacts
+# -------------------------------------------------------------------------
+.idea
+.vscode
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# -------------------------------------------------------------------------
+# Language / runtime caches and build artefacts
+# -------------------------------------------------------------------------
+# Node
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv
+venv
+env
+dist
+build
+*.egg-info
+
+# Dart / Flutter
+.dart_tool
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+*.dill
+
+# Go
+vendor/
+
+# -------------------------------------------------------------------------
+# Logs and temporary files
+# -------------------------------------------------------------------------
+*.log
+*.tmp
+*.bak
+*.orig
+*.patch
+tmp/
+temp/
+
+# -------------------------------------------------------------------------
+# CI / CD and local tooling configs (no value inside the image)
+# -------------------------------------------------------------------------
+.circleci
+.travis.yml
+.github
+Jenkinsfile
+.pre-commit-config.yaml

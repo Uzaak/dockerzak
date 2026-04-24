@@ -1,0 +1,16 @@
+# Optional override — share Claude Code auth and state from the host.
+# Used automatically by `make up CLAUDE_DIR=~/.claude`.
+# Do not use directly; the Makefile sets CLAUDE_DIR and CLAUDE_JSON.
+#
+# Three mounts are needed:
+#   1. ~/.claude.json      — numStartups and other state that suppresses first-run setup
+#   2. ~/.claude           — credentials, settings, plugins, session history
+#   3. ~/.claude at its original host path — plugin installPaths in
+#      installed_plugins.json are stored as absolute host paths; this
+#      second alias makes them resolve correctly inside the container.
+services:
+  dockerzak:
+    volumes:
+      - "${CLAUDE_JSON}:/home/dev/.claude.json"
+      - "${CLAUDE_DIR}:/home/dev/.claude"
+      - "${CLAUDE_DIR}:${CLAUDE_DIR}"

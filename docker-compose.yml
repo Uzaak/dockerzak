@@ -1,0 +1,40 @@
+# =============================================================================
+# DockerZak — docker-compose.yml
+# =============================================================================
+#
+# Usage:
+#   make up HOST_PATH=/home/tiagofurlaneto/Developer/DockerZak
+#
+# Environment variables:
+#   HOST_PATH   Absolute path on the host to mount as the workspace.
+#               Default: ./workspace
+#
+# To enter the container:
+#   docker exec -it dockerzak bash
+#   # or
+#   make exec
+#
+# Security note:
+#   The Docker socket (/var/run/docker.sock) is intentionally NOT mounted.
+#   Mounting it grants the container root-equivalent access to the host.
+# =============================================================================
+
+services:
+  dockerzak:
+    build:
+      context: .
+    image: dockerzak:latest
+    container_name: dockerzak
+    restart: unless-stopped
+
+    volumes:
+      # Workspace bind-mount — persists your code across container restarts.
+      # HOST_PATH should be an absolute path on the host (default: ./workspace).
+      - "${HOST_PATH:-./workspace}:/home/dev/workspace"
+      # Mount host CA certificates so Node.js (Claude Code) can verify TLS
+      # through corporate proxies that perform TLS inspection.
+      - "/etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/host-ca-bundle.crt:ro"
+
+    environment:
+      # Tell Node.js to trust the host CA bundle (needed for corporate TLS inspection)
+      - NODE_EXTRA_CA_CERTS=/etc/ssl/certs/host-ca-bundle.crt

@@ -1,0 +1,61 @@
+# === Flutter & Claude Code (STORY-3 Dockerfile snippet) ===
+# Append these layers to the base Dockerfile.
+# Prerequisites assumed from prior layers:
+#   - Debian/Ubuntu-based image
+#   - Non-root user "dev" (uid/gid already created)
+#   - Node.js and npm available
+#   - git, openssh-server, curl installed
+#   - /home/dev home directory exists
+
+# ---------------------------------------------------------------------------
+# Flutter SDK
+# Cloned as root, then ownership transferred to dev so that the dev user
+# can run `flutter` and `dart` commands without sudo.
+# ---------------------------------------------------------------------------
+RUN git clone https://github.com/flutter/flutter.git /opt/flutter --depth 1 -b stable \
+    && chown -R dev:dev /opt/flutter
+
+ENV PATH="/opt/flutter/bin:${PATH}"
+
+# Run as dev so that flutter precache writes to dev-owned cache dirs.
+USER dev
+RUN flutter precache --no-web --no-fuchsia --no-linux-desktop
+USER root
+
+# ---------------------------------------------------------------------------
+# Claude Code (global npm install)
+# ---------------------------------------------------------------------------
+RUN npm install -g @anthropic-ai/claude-code
+
+# ---------------------------------------------------------------------------
+# SSH hardening
+# Drop-in config file so we don't clobber the distro sshd_config entirely.
+# ---------------------------------------------------------------------------
+RUN mkdir -p /etc/ssh/sshd_config.d
+COPY dockerzak.conf /etc/ssh/sshd_config.d/dockerzak.conf
+
+# Ensure the drop-in is actually picked up by the main sshd_config.
+# Most modern openssh-server packages ship with "Include /etc/ssh/sshd_config.d/*.conf"
+# already present; this RUN is a safety net for images that do not.
+RUN grep -qxF 'Include /etc/ssh/sshd_config.d/*.conf' /etc/ssh/sshd_config \
+    || echo 'Include /etc/ssh/sshd_config.d/*.conf' >> /etc/ssh/sshd_config
+
+# ---------------------------------------------------------------------------
+# Workspace directory
+# NOTE: /dev is the kernel device filesystem in Linux and is automatically
+# mounted by the Docker runtime.  Writing to or chown-ing /dev will corrupt
+# device nodes and break the container.  The mount point used here is
+# /home/dev/workspace — map your host volume to this path instead:
+#   docker run -v $(pwd):/home/dev/workspace ...
+# ---------------------------------------------------------------------------
+RUN mkdir -p /home/dev/workspace \
+    && chown dev:dev /home/dev/workspace
+
+# ---------------------------------------------------------------------------
+# Entrypoint
+# ---------------------------------------------------------------------------
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD []

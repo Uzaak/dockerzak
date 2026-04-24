@@ -1,0 +1,7 @@
+# Optional override — mount a local plugin marketplace directory into the container.
+# Used automatically by `make up PLUGIN_DIR=/path/to/plugins`.
+# Do not use directly; the Makefile sets PLUGIN_DIR in the environment.
+services:
+  dockerzak:
+    volumes:
+      - "${PLUGIN_DIR}:${PLUGIN_DIR}:ro"
