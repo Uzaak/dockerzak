@@ -142,19 +142,28 @@ RUN apt-get update \
 # UID/GID 1000 is the conventional first non-system user on Debian/Ubuntu and
 # matches the default host UID on most Linux developer workstations, which
 # avoids bind-mount permission issues when running the container locally.
+#
+# macOS often uses GID 20 (staff), which collides with Debian's reserved GID 20
+# (dialout). Reuse the existing group instead of groupadd in that case.
 # ---------------------------------------------------------------------------
 ARG USER_UID=1000
 ARG USER_GID=1000
-RUN groupadd --gid ${USER_GID} dev \
- && useradd \
-      --uid ${USER_UID} \
-      --gid ${USER_GID} \
+RUN set -eux; \
+    if getent group "${USER_GID}" > /dev/null 2>&1; then \
+      PRIMARY_GROUP=$(getent group "${USER_GID}" | cut -d: -f1); \
+    else \
+      groupadd --gid "${USER_GID}" dev; \
+      PRIMARY_GROUP=dev; \
+    fi; \
+    useradd \
+      --uid "${USER_UID}" \
+      --gid "${PRIMARY_GROUP}" \
       --create-home \
       --home-dir /home/dev \
       --shell /bin/bash \
-      dev \
- && echo 'dev ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/dev \
- && chmod 0440 /etc/sudoers.d/dev
+      dev; \
+    echo 'dev ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/dev; \
+    chmod 0440 /etc/sudoers.d/dev
 # NOTE: Full sudo granted for developer convenience (install packages, etc).
 # The Docker socket is NOT mounted by default — do not mount /var/run/docker.sock
 # unless you understand that it gives root-equivalent access to the host.
@@ -165,7 +174,7 @@ RUN groupadd --gid ${USER_GID} dev \
 ENV GOPATH=/home/dev/go
 
 RUN mkdir -p /home/dev/go/bin /home/dev/go/src /home/dev/go/pkg \
- && chown -R dev:dev /home/dev/go
+ && chown -R "${USER_UID}:${USER_GID}" /home/dev/go
 
 # PATH updated with Go workspace bin dir
 ENV PATH=/usr/local/go/bin:/home/dev/go/bin:$PATH
@@ -297,7 +306,7 @@ USER root
 # ---------------------------------------------------------------------------
 ENV FLUTTER_VERSION=3.24.5
 RUN git clone https://github.com/flutter/flutter.git /opt/flutter --depth 1 -b ${FLUTTER_VERSION} \
- && chown -R dev:dev /opt/flutter
+ && chown -R "${USER_UID}:${USER_GID}" /opt/flutter
 
 ENV PATH="/opt/flutter/bin:${PATH}"
 
@@ -324,7 +333,7 @@ RUN npm install -g @anthropic-ai/claude-code
 #   docker run -v /your/host/path:/home/dev/workspace ...
 # ---------------------------------------------------------------------------
 RUN mkdir -p /home/dev/workspace \
- && chown dev:dev /home/dev/workspace
+ && chown "${USER_UID}:${USER_GID}" /home/dev/workspace
 
 USER dev
 WORKDIR /home/dev

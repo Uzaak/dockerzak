@@ -13,7 +13,7 @@
 # can run `flutter` and `dart` commands without sudo.
 # ---------------------------------------------------------------------------
 RUN git clone https://github.com/flutter/flutter.git /opt/flutter --depth 1 -b stable \
-    && chown -R dev:dev /opt/flutter
+    && chown -R "$(id -u dev):$(id -g dev)" /opt/flutter
 
 ENV PATH="/opt/flutter/bin:${PATH}"
 
@@ -49,7 +49,7 @@ RUN grep -qxF 'Include /etc/ssh/sshd_config.d/*.conf' /etc/ssh/sshd_config \
 #   docker run -v $(pwd):/home/dev/workspace ...
 # ---------------------------------------------------------------------------
 RUN mkdir -p /home/dev/workspace \
-    && chown dev:dev /home/dev/workspace
+    && chown "$(id -u dev):$(id -g dev)" /home/dev/workspace
 
 # ---------------------------------------------------------------------------
 # Entrypoint
