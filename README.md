@@ -107,20 +107,21 @@ make up HOST_PATH=/your/project CLAUDE_DIR=~/.claude PLUGIN_DIR=~/Developer/Clau
 
 | Tool                | Version       |
 | ------------------- | ------------- |
-| Go                  | 1.22.4        |
+| Go                  | latest stable |
 | Node.js             | 20 LTS        |
 | Java                | 17 (OpenJDK)  |
 | PHP                 | 8.2           |
-| Flutter             | 3.24.5        |
+| Flutter             | latest stable |
 | Docker CLI          | latest stable |
 | Kubectl             | 1.30          |
-| Helm                | 3.15.4        |
+| Helm                | latest stable |
 | AWS CLI             | v2            |
 | GitHub CLI          | latest stable |
 | Composer            | latest        |
 | Homebrew            | latest        |
-| Air (Go hot-reload) | 1.61.7        |
+| Air (Go hot-reload) | latest        |
 | Claude Code         | latest        |
+| rtk                 | latest        |
 
 ---
 

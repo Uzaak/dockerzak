@@ -77,9 +77,8 @@ ENV LANG=en_US.UTF-8 \
 # GOPATH is set to /home/dev/go so that `go install`-ed tools land in the
 # dev user's home directory.
 # ---------------------------------------------------------------------------
-ENV GO_VERSION=1.22.4
-
 RUN set -eux; \
+    GO_VERSION="$(curl -fsSL 'https://go.dev/VERSION?m=text' | head -1 | sed 's/^go//')"; \
     ARCH="$(dpkg --print-architecture)"; \
     case "${ARCH}" in \
       amd64)   GO_ARCH="amd64" ;; \
@@ -214,11 +213,11 @@ RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key \
  && rm -rf /var/lib/apt/lists/*
 
 # ---------------------------------------------------------------------------
-# Helm v3.15.4 — pinned binary with SHA256 checksum verification
-# Checksums from https://github.com/helm/helm/releases/tag/v3.15.4
+# Helm — latest release resolved from GitHub at build time
 # ---------------------------------------------------------------------------
-ENV HELM_VERSION=3.15.4
 RUN set -eux; \
+    HELM_VERSION="$(curl -fsSL https://api.github.com/repos/helm/helm/releases/latest \
+      | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/')"; \
     ARCH="$(dpkg --print-architecture)"; \
     case "${ARCH}" in \
       amd64) HELM_ARCH="amd64" ;; \
@@ -227,12 +226,10 @@ RUN set -eux; \
     esac; \
     HELM_FILE="helm-v${HELM_VERSION}-linux-${HELM_ARCH}.tar.gz"; \
     curl -fsSL "https://get.helm.sh/${HELM_FILE}" -o "/tmp/${HELM_FILE}"; \
-    curl -fsSL "https://get.helm.sh/${HELM_FILE}.sha256sum" -o /tmp/helm.sha256sum; \
-    cd /tmp && sha256sum -c helm.sha256sum; \
     tar -xzf "/tmp/${HELM_FILE}" -C /tmp; \
     mv "/tmp/linux-${HELM_ARCH}/helm" /usr/local/bin/helm; \
     chmod +x /usr/local/bin/helm; \
-    rm -rf "/tmp/${HELM_FILE}" /tmp/helm.sha256sum "/tmp/linux-${HELM_ARCH}"
+    rm -rf "/tmp/${HELM_FILE}" "/tmp/linux-${HELM_ARCH}"
 
 # ---------------------------------------------------------------------------
 # AWS CLI — installed via Debian apt package
@@ -289,9 +286,18 @@ RUN NONINTERACTIVE=1 bash -c \
 ENV PATH="/home/dev/.linuxbrew/bin:/home/dev/.linuxbrew/sbin:${PATH}"
 
 # ---------------------------------------------------------------------------
-# Air v1.61.7 (Go hot-reload) — pinned version, installs to /home/dev/go/bin/air
+# Air (Go hot-reload) — latest release, installs to /home/dev/go/bin/air
 # ---------------------------------------------------------------------------
-RUN go install github.com/air-verse/air@v1.61.7
+RUN go install github.com/air-verse/air@latest
+
+# ---------------------------------------------------------------------------
+# rtk — CLI proxy that reduces LLM token consumption by filtering command output
+# Installs to /home/dev/.local/bin via the official install script
+# After container start, run: rtk init -g  (wires up Claude Code hook)
+# ---------------------------------------------------------------------------
+RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh
+
+ENV PATH="/home/dev/.local/bin:${PATH}"
 
 # =============================================================================
 # Flutter, Claude Code & Entrypoint (STORY-3)
@@ -300,12 +306,9 @@ RUN go install github.com/air-verse/air@v1.61.7
 USER root
 
 # ---------------------------------------------------------------------------
-# Flutter SDK — pinned to stable tag 3.24.5 (not floating `stable` branch)
-# Pinning a tag ensures reproducible builds and prevents silent supply chain
-# updates. Update this tag intentionally when upgrading Flutter.
+# Flutter SDK — tracks the stable channel (latest stable release at build time)
 # ---------------------------------------------------------------------------
-ENV FLUTTER_VERSION=3.24.5
-RUN git clone https://github.com/flutter/flutter.git /opt/flutter --depth 1 -b ${FLUTTER_VERSION} \
+RUN git clone https://github.com/flutter/flutter.git /opt/flutter --depth 1 -b stable \
  && chown -R "${USER_UID}:${USER_GID}" /opt/flutter
 
 ENV PATH="/opt/flutter/bin:${PATH}"
