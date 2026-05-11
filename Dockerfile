@@ -338,6 +338,16 @@ RUN npm install -g @anthropic-ai/claude-code
 RUN mkdir -p /home/dev/workspace \
  && chown "${USER_UID}:${USER_GID}" /home/dev/workspace
 
+# ---------------------------------------------------------------------------
+# Container-level Claude Code instructions
+#
+# DOCKER_CLAUDE.md is copied to /home/dev/CLAUDE.md so Claude Code picks it
+# up via directory tree-walking for every project under /home/dev/workspace/.
+# This location is NOT shadowed by the CLAUDE_DIR volume mount (which targets
+# /home/dev/.claude, not /home/dev directly).
+# ---------------------------------------------------------------------------
+COPY --chown=${USER_UID}:${USER_GID} DOCKER_CLAUDE.md /home/dev/CLAUDE.md
+
 USER dev
 WORKDIR /home/dev
 
