@@ -344,7 +344,8 @@ WORKDIR /home/dev
 # Set NODE_EXTRA_CA_CERTS so Claude Code (and any Node.js tool) can connect
 # through corporate TLS-intercepting proxies. The CA bundle is mounted from
 # the host at runtime via docker-compose.yml.
-RUN echo 'export NODE_EXTRA_CA_CERTS=/etc/ssl/certs/host-ca-bundle.crt' >> /home/dev/.bashrc
+RUN echo 'export NODE_EXTRA_CA_CERTS=/etc/ssl/certs/host-ca-bundle.crt' >> /home/dev/.bashrc \
+ && echo '[ -f ~/.rtk-initialized ] || { rtk init -g 2>/dev/null && touch ~/.rtk-initialized; }' >> /home/dev/.bashrc
 
 # Keep the container alive indefinitely.
 # Access it with: docker exec -it dockerzak bash
