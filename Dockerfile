@@ -322,8 +322,23 @@ USER root
 # ---------------------------------------------------------------------------
 # Claude Code (global npm install)
 # Authentication is interactive — run `claude` after starting the container
+#
+# The platform-native binary (~230 MB) ships as an optionalDependency.
+# If its download fails (transient network, rate-limit, stale build cache),
+# npm silently leaves a 500-byte stub and `claude` prints "not installed".
+# We detect the stub and retry once, then fail the build loudly.
 # ---------------------------------------------------------------------------
-RUN npm install -g @anthropic-ai/claude-code
+RUN set -e; \
+    npm install -g @anthropic-ai/claude-code; \
+    CLAUDE_EXE=/usr/lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe; \
+    CLAUDE_SIZE=$(stat -c%s "$CLAUDE_EXE" 2>/dev/null || echo 0); \
+    if [ "$CLAUDE_SIZE" -lt 1000000 ]; then \
+      echo "claude native binary missing (${CLAUDE_SIZE}B) — retrying npm install..." >&2; \
+      npm install -g @anthropic-ai/claude-code; \
+      CLAUDE_SIZE=$(stat -c%s "$CLAUDE_EXE" 2>/dev/null || echo 0); \
+    fi; \
+    [ "$CLAUDE_SIZE" -gt 1000000 ] \
+    || { echo "FATAL: claude native binary not installed after retry (${CLAUDE_SIZE}B)" >&2; exit 1; }
 
 # ---------------------------------------------------------------------------
 # Workspace mount point
