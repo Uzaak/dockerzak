@@ -339,14 +339,17 @@ RUN mkdir -p /home/dev/workspace \
  && chown "${USER_UID}:${USER_GID}" /home/dev/workspace
 
 # ---------------------------------------------------------------------------
-# Container-level Claude Code instructions
+# Container-level Claude Code instructions (managed policy)
 #
-# DOCKER_CLAUDE.md is copied to /home/dev/CLAUDE.md so Claude Code picks it
-# up via directory tree-walking for every project under /home/dev/workspace/.
-# This location is NOT shadowed by the CLAUDE_DIR volume mount (which targets
-# /home/dev/.claude, not /home/dev directly).
+# /etc/claude-code/CLAUDE.md  — documented Linux managed-policy location;
+#                               loaded for every user, cannot be excluded.
+# /etc/claude/CLAUDE.md       — belt-and-suspenders second location.
+#
+# Both are writable only by root, so no project or user setting can shadow them.
 # ---------------------------------------------------------------------------
-COPY --chown=${USER_UID}:${USER_GID} DOCKER_CLAUDE.md /home/dev/CLAUDE.md
+RUN mkdir -p /etc/claude-code /etc/claude
+COPY DOCKER_CLAUDE.md /etc/claude-code/CLAUDE.md
+COPY DOCKER_CLAUDE.md /etc/claude/CLAUDE.md
 
 USER dev
 WORKDIR /home/dev
