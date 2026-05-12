@@ -14,3 +14,15 @@ services:
       - "${CLAUDE_JSON}:/home/dev/.claude.json"
       - "${CLAUDE_DIR}:/home/dev/.claude"
       - "${CLAUDE_DIR}:${CLAUDE_DIR}"
+    environment:
+      # Pass OAuth token or API key from the host environment.
+      # On macOS the token lives in Keychain and cannot be file-mounted;
+      # set CLAUDE_CODE_OAUTH_TOKEN in your shell profile:
+      #   export CLAUDE_CODE_OAUTH_TOKEN=$(security find-generic-password \
+      #     -s "Claude Code-credentials" -w | python3 -c \
+      #     "import sys,json; d=json.load(sys.stdin); \
+      #      print(d.get('claudeAiOauth',{}).get('accessToken',''))")
+      # On Linux set ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN in your shell.
+      # Unset variables are silently ignored by Docker Compose.
+      - CLAUDE_CODE_OAUTH_TOKEN
+      - ANTHROPIC_API_KEY
