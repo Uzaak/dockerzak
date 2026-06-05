@@ -39,6 +39,18 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Claude config seed
+# The host ~/.claude.json is mounted read-only at /run/host-claude.json to
+# avoid two processes (host Claude + container Claude) writing the same file,
+# which causes truncation/corruption. Copy it into the dev user's home so
+# Claude Code has its own isolated, writable copy.
+# ---------------------------------------------------------------------------
+if [ -f /run/host-claude.json ]; then
+    cp /run/host-claude.json /home/dev/.claude.json
+    chown dev:dev /home/dev/.claude.json
+fi
+
+# ---------------------------------------------------------------------------
 # SSH host keys
 # Generate any missing host key types (ed25519, rsa, ecdsa, ...).
 # This is a no-op for key types that already exist on the image or a volume.

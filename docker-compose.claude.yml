@@ -3,7 +3,9 @@
 # Do not use directly; the Makefile sets CLAUDE_DIR and CLAUDE_JSON.
 #
 # Three mounts are needed:
-#   1. ~/.claude.json      — numStartups and other state that suppresses first-run setup
+#   1. ~/.claude.json      — mounted read-only at /run/host-claude.json; the entrypoint
+#                            copies it to /home/dev/.claude.json so Claude Code has an
+#                            isolated writable copy (avoids race/corruption with host Claude)
 #   2. ~/.claude           — credentials, settings, plugins, session history
 #   3. ~/.claude at its original host path — plugin installPaths in
 #      installed_plugins.json are stored as absolute host paths; this
@@ -11,7 +13,7 @@
 services:
   dockerzak:
     volumes:
-      - "${CLAUDE_JSON}:/home/dev/.claude.json"
+      - "${CLAUDE_JSON}:/run/host-claude.json:ro"
       - "${CLAUDE_DIR}:/home/dev/.claude"
       - "${CLAUDE_DIR}:${CLAUDE_DIR}"
     environment:
